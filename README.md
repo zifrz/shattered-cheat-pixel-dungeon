@@ -1,3 +1,41 @@
+# Shattered Cheat Pixel Dungeon
+
+**Cheats implemented in this fork:**
+
+### Cheats that require activation before starting a new game:
+- Near-invincible health and max HP set to an extremely large value.
+- Maximum strength, attack skill, and defense skill (all set to 999).
+- Maximum level (30) and experience.
+- Removal of all negative buffs and hunger.
+- Permanent beneficial buffs including:
+  - Bless (infinite duration)
+  - Regeneration
+  - Invisibility (infinite duration)
+  - Barkskin
+  - GreaterHaste
+  - Barrier (with a large shield)
+  - ArtifactRecharge
+  - Recharging
+- Unlimited hunger (hunger is fully satisfied).
+
+### Cheats active during gameplay (no need to activate before starting a new game):
+- All items in inventory and equipped are fully identified.
+- Infinite quantity for all consumable items (potions, scrolls, runestones, food).
+- Continuous refresh of consumable quantities and identification throughout gameplay.
+
+> **Note:** Opening, closing, or saving the game with cheats enabled may cause buffs to duplicate.
+
+---
+
+### How to enable cheats:
+1. Navigate to the **Settings** menu.
+2. Click on the last tab labeled **Cheats**.
+3. Check the box next to **Cheatmode** to activate cheats.
+
+Check out Evan's Original Shattered Pixel Dungeon Below
+
+---
+
 # Shattered Pixel Dungeon
 
 [Shattered Pixel Dungeon](https://shatteredpixel.com/shatteredpd/) is an open-source traditional roguelike dungeon crawler with randomized levels and enemies, and hundreds of items to collect and use. It's based on the [source code of Pixel Dungeon](https://github.com/00-Evan/pixel-dungeon-gradle), by [Watabou](https://www.watabou.ru).

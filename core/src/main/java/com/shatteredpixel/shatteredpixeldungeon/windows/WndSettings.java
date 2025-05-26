@@ -68,6 +68,7 @@ public class WndSettings extends WndTabbed {
 	private DataTab     data;
 	private AudioTab    audio;
 	private LangsTab    langs;
+	private CheatTab    cheat;
 
 	public static int last_index = 0;
 
@@ -185,6 +186,21 @@ public class WndSettings extends WndTabbed {
 
 		};
 		add( langsTab );
+
+
+		cheat = new CheatTab();
+		cheat.setSize(width, 0);
+		height = Math.max(height, cheat.height());
+		add( cheat );
+
+		add( new IconTab(Icons.get(Icons.CHALLENGE_COLOR)){
+			@Override
+			protected void select(boolean value) {
+				super.select(value);
+				cheat.visible = cheat.active = value;
+				if (value) last_index = 6;
+			}
+		});
 
 		resize(width, (int)Math.ceil(height));
 
@@ -1306,6 +1322,51 @@ public class WndSettings extends WndTabbed {
 				height = txtTranifex.bottom();
 			}
 
+		}
+	}
+
+	private static class CheatTab extends Component {
+
+		RenderedTextBlock title;
+		ColorBlock sep1;
+		CheckBox chkCheatMode;
+
+		@Override
+		protected void createChildren() {
+			title = PixelScene.renderTextBlock(Messages.get(this, "title"), 9);
+			title.hardlight(TITLE_COLOR);
+			add(title);
+
+			sep1 = new ColorBlock(1, 1, 0xFF000000);
+			add(sep1);
+
+			chkCheatMode = new CheckBox(Messages.get(this, "cheat_mode")) {
+				@Override
+				protected void onClick() {
+					super.onClick();
+					SPDSettings.cheatMode(checked());
+					updateCheats();
+				}
+			};
+			chkCheatMode.checked(SPDSettings.cheatMode());
+			add(chkCheatMode);
+
+		}
+
+		private void updateCheats() {
+		}
+
+		@Override
+		protected void layout() {
+			title.setPos((width - title.width())/2, y + GAP);
+			sep1.size(width, 1);
+			sep1.y = title.bottom() + 3*GAP;
+
+			float pos = sep1.y + 1 + GAP;
+
+			chkCheatMode.setRect(0, pos, width, BTN_HEIGHT);
+
+            height = chkCheatMode.bottom();
 		}
 	}
 }

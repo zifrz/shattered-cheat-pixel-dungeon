@@ -447,6 +447,18 @@ public class SPDSettings extends GameSettings {
 		}
 	}
 
+	//Cheats
+	public static final String KEY_CHEAT_MODE = "cheat_mode";
+
+	public static void cheatMode(boolean value) {
+		put(KEY_CHEAT_MODE, value);
+	}
+
+	public static boolean cheatMode() {
+		return getBoolean(KEY_CHEAT_MODE, false);
+	}
+
+
 	//Window management (desktop only atm)
 	
 	public static final String KEY_WINDOW_WIDTH     = "window_width";

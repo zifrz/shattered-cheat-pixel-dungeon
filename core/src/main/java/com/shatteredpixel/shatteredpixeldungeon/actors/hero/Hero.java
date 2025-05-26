@@ -130,6 +130,7 @@ import com.shatteredpixel.shatteredpixeldungeon.items.rings.RingOfTenacity;
 import com.shatteredpixel.shatteredpixeldungeon.items.scrolls.Scroll;
 import com.shatteredpixel.shatteredpixeldungeon.items.scrolls.ScrollOfMagicMapping;
 import com.shatteredpixel.shatteredpixeldungeon.items.scrolls.exotic.ScrollOfChallenge;
+import com.shatteredpixel.shatteredpixeldungeon.items.stones.Runestone;
 import com.shatteredpixel.shatteredpixeldungeon.items.trinkets.ThirteenLeafClover;
 import com.shatteredpixel.shatteredpixeldungeon.items.wands.Wand;
 import com.shatteredpixel.shatteredpixeldungeon.items.wands.WandOfLivingEarth;
@@ -245,9 +246,19 @@ public class Hero extends Char {
 		belongings = new Belongings( this );
 		
 		visibleEnemies = new ArrayList<>();
+
+		if (SPDSettings.cheatMode()) {
+			enableCheatMode();
+		}
 	}
 	
 	public void updateHT( boolean boostHP ){
+		if (SPDSettings.cheatMode()) {
+			// In cheat mode, keep HP at max
+			HP = HT;
+			return;
+		}
+
 		int curHT = HT;
 		
 		HT = 20 + 5*(lvl-1) + HTBoost;
@@ -322,6 +333,10 @@ public class Hero extends Char {
 		exp = bundle.getInt( EXPERIENCE );
 
 		HTBoost = bundle.getInt(HTBOOST);
+
+		if (SPDSettings.cheatMode()) {
+			enableCheatMode();
+		}
 
 		super.restoreFromBundle( bundle );
 
@@ -790,6 +805,11 @@ public class Hero extends Char {
 	@Override
 	public void spend( float time ) {
 		super.spend(time);
+
+		// Check if cheatmode is enabled, if yes refresh backpack items to increase their quantity
+		if (SPDSettings.cheatMode()) {
+			refreshCheatItems();
+		}
 	}
 
 	@Override
@@ -1066,6 +1086,13 @@ public class Hero extends Char {
 				Item item = heap.peek();
 				if (item.doPickUp( this )) {
 					heap.pickUp();
+
+					// Cheat mode - make consumables infinite
+					if (SPDSettings.cheatMode()) {
+						if (item instanceof Potion || item instanceof Scroll || item instanceof Runestone) {
+							item.quantity(Integer.MAX_VALUE);
+						}
+					}
 
 					if (item instanceof Dewdrop
 							|| item instanceof TimekeepersHourglass.sandBag
@@ -1438,6 +1465,10 @@ public class Hero extends Char {
 	
 	@Override
 	public int attackProc( final Char enemy, int damage ) {
+		if (SPDSettings.cheatMode() && enemy != this && enemy.alignment == Alignment.ENEMY) {
+			return enemy.HP + enemy.shielding();
+		}
+
 		damage = super.attackProc( enemy, damage );
 
 		KindOfWeapon wep;
@@ -1548,6 +1579,11 @@ public class Hero extends Char {
 		if (buff(TimekeepersHourglass.timeStasis.class) != null
 				|| buff(TimeStasis.class) != null) {
 			return;
+		}
+
+		// Make incoming damage 0
+		if (SPDSettings.cheatMode() && dmg > 0) {
+			return; // Take no damage
 		}
 
 		//regular damage interrupt, triggers on any damage except specific mild DOT effects
@@ -2549,5 +2585,73 @@ public class Hero extends Char {
 
 	public static interface Doom {
 		public void onDeath();
+	}
+
+	public void enableCheatMode() {
+		// Health - override all calculations
+		HTBoost = Integer.MAX_VALUE/2; // Very large number to dominate calculations
+		HP = HT = Integer.MAX_VALUE/2; // Set directly to avoid being overwritten
+
+		// Stats
+		STR = 999;
+		attackSkill = 999;
+		defenseSkill = 999;
+
+		// Level
+		lvl = MAX_LEVEL;
+		exp = maxExp();
+
+		// Remove any negative buffs and hunger
+		for (Buff b : buffs()) {
+			if (b.type == Buff.buffType.NEGATIVE || b instanceof Hunger) {
+				b.detach();
+			}
+		}
+
+		// Apply all beneficial buffs with infinite duration
+		Buff.affect(this, Bless.class, Float.POSITIVE_INFINITY);
+		Buff.affect(this, Regeneration.class);
+		Buff.affect(this, Invisibility.class, Float.POSITIVE_INFINITY);
+		Buff.affect(this, Barkskin.class).set(999, 1);
+		Buff.affect(this, GreaterHaste.class);
+		Buff.affect(this, Barrier.class).setShield(999);
+		Buff.affect(this, ArtifactRecharge.class);
+		Buff.affect(this, Recharging.class, Float.POSITIVE_INFINITY);
+
+		// Unlimited hunger
+		Hunger hunger = Buff.affect(this, Hunger.class);
+		hunger.satisfy(Float.POSITIVE_INFINITY);
+
+		// Identify all items and make consumables infinite
+		for (Item item : belongings) {
+			item.identify();
+			if (item instanceof Potion || item instanceof Scroll || item instanceof Runestone ||
+					item instanceof com.shatteredpixel.shatteredpixeldungeon.items.food.Food) {
+				item.quantity(Integer.MAX_VALUE);
+			}
+		}
+
+		GLog.h("Cheat mode fully activated!");
+	}
+
+	//Method that increases backpack item quantity
+	private void refreshCheatItems() {
+		if (!SPDSettings.cheatMode()) return;
+
+		for (Item item : belongings.backpack.items.toArray(new Item[0])) {
+			item.identify();
+			if (item instanceof Potion || item instanceof Scroll || item instanceof Runestone ||
+					item instanceof com.shatteredpixel.shatteredpixeldungeon.items.food.Food) {
+				if (item.quantity() < Integer.MAX_VALUE) {
+					item.quantity(Integer.MAX_VALUE);
+				}
+			}
+		}
+
+		// Also refresh equipped items
+		if (belongings.weapon != null) belongings.weapon.identify();
+		if (belongings.armor != null) belongings.armor.identify();
+		if (belongings.misc != null) belongings.misc.identify();
+		if (belongings.ring != null) belongings.ring.identify();
 	}
 }
